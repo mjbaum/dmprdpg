@@ -169,7 +169,7 @@ if __name__ == '__main__':
         (1, 0): [[0.06, 0.18, 0.04, 0.04], [0.18, 0.12, 0.04, 0.04], [0.04, 0.04, 0.02, 0.02], [0.04, 0.04, 0.02, 0.02]],
         (1, 1): [[0.16, 0.16, 0.04, 0.04], [0.16, 0.16, 0.04, 0.04], [0.04, 0.04, 0.02, 0.02], [0.04, 0.04, 0.02, 0.02]],
     }
-    model2 = Dynamic_Multilayer_SBM(layers=2, timesteps=2, groups=[250,250,250,250], prob_dict=B_dict)
+    model2 = Dynamic_Multilayer_SBM(layers=2, timesteps=2, groups=[250,250,250,200], prob_dict=B_dict)
     model2.sample()
     model2.get_centroids()
     model2.get_centroids_theo()
