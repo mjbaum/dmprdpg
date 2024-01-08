@@ -11,8 +11,8 @@ Given a set of adjacency matrices $\textbf{A}_{k,t} \in \{0,1\}^{n \times n}$ we
 ```math
 \textbf{A} = 
 \begin{bmatrix}
-\textbf{A}_{1,1} & \dots & \textbf{A}_{1,T} \\\
-\vdots & \ddots & \vdots \\\
+\textbf{A}_{1,1} & \dots & \textbf{A}_{1,T} \\
+\vdots & \ddots & \vdots \\
 \textbf{A}_{K,1} & \dots & \textbf{A}_{K,T}
 \end{bmatrix}
 ```
