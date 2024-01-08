@@ -47,7 +47,7 @@ B^{(1)}_3 = \begin{bmatrix}
 0.02 & 0.20 & 0.04 & 0.10\\
 0.18 & 0.04 & 0.02 & 0.02\\
 0.10 & 0.10 & 0.02 & 0.06
-\end{bmatrix} \\
+\end{bmatrix} \\\
 
 B^{(2)}_1 = \begin{bmatrix}
 0.08 & 0.02 & 0.18 & 0.10\\
@@ -68,7 +68,7 @@ B^{(2)}_3 = \begin{bmatrix}
 0.02 & 0.20 & 0.04 & 0.10\\
 0.18 & 0.04 & 0.02 & 0.02\\
 0.10 & 0.10 & 0.02 & 0.06\\
-\end{bmatrix} \\
+\end{bmatrix} \\\
 
 B^{(3)}_1 = \begin{bmatrix}
 0.08 & 0.08 & 0.08 & 0.08\\
@@ -89,6 +89,6 @@ B^{(3)}_3 = \begin{bmatrix}
 0.08 & 0.08 & 0.08 & 0.08\\
 0.08 & 0.08 & 0.08 & 0.08\\
 0.08 & 0.08 & 0.08 & 0.08\\
-\end{bmatrix} \\
+\end{bmatrix} \\\
 ```
 In Figures \ref{fig:leftembeddings} and \ref{fig:rightembeddings}, the true latent position for each node is one of four points denoted with an orange $\times$ and the estimated latent positions for each community are plotted by color. The mean embedding for each group is denoted with a red dot. These simulations suggest that the desired stability properties are likely to apply. It also appears that our estimators for the latent positions are consistent and that the errors are normally distributed. Our comparisons of estimator variance for networks of different sizes in Figure \ref{fig:variance } appears to be roughly consistent with $1/n$ scaling which along with the Q-Q plots in Figure \ref{fig:qqplots} is consistent with the central limit theorem we aim to prove.
