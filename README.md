@@ -25,4 +25,69 @@ We then retrieve the estimates $\hat{\textbf{X}}^k$ and $\hat{\textbf{Y}}^t$ by 
 
 ## Simulation Results
 
-We have generated a number of computer simulations to empirically test the properties of our embedding technique in the simplified case of a stochastic block model. This represents the setting where each node is assigned to one of a fixed number of communities which have a shared latent position. In this case, our model has $1000$ nodes and these are equally distributed among four communities with latent positions defined such that at time $t$ in layer $k$ the $(i,j)^{th}$ entry of $B^{(k)}_t$ denotes the connection probability between a node in community $i$ and a node in community $j$. In Figures \ref{fig:leftembeddings} and \ref{fig:rightembeddings}, the true latent position for each node is one of four points denoted with an orange $\times$ and the estimated latent positions for each community are plotted by color. The mean embedding for each group is denoted with a red dot. These simulations suggest that the desired stability properties are likely to apply. It also appears that our estimators for the latent positions are consistent and that the errors are normally distributed. Our comparisons of estimator variance for networks of different sizes in Figure \ref{fig:variance } appears to be roughly consistent with $1/n$ scaling which along with the Q-Q plots in Figure \ref{fig:qqplots} is consistent with the central limit theorem we aim to prove.
+We have generated a number of computer simulations to empirically test the properties of our embedding technique in the simplified case of a stochastic block model. This represents the setting where each node is assigned to one of a fixed number of communities which have a shared latent position. In this case, our model has $1000$ nodes and these are equally distributed among four communities with latent positions defined such that at time $t$ in layer $k$ the $(i,j)^{th}$ entry of $B^{(k)}_t$ denotes the connection probability between a node in community $i$ and a node in community $j$. 
+
+\[B^{(1)}_1 = \begin{bmatrix}
+0.08 & 0.02 & 0.18 & 0.10\\
+0.02 & 0.20 & 0.04 & 0.10\\
+0.18 & 0.04 & 0.02 & 0.02\\
+0.10 & 0.10 & 0.02 & 0.06\\
+\end{bmatrix},
+%
+B^{(1)}_2 = \begin{bmatrix}
+0.16 & 0.16 & 0.04 & 0.10\\
+0.16 & 0.16 & 0.04 & 0.10\\
+0.04 & 0.04 & 0.09 & 0.02\\
+0.10 & 0.10 & 0.02 & 0.06\\
+\end{bmatrix},
+%
+B^{(1)}_3 = \begin{bmatrix}
+0.08 & 0.02 & 0.18 & 0.10\\
+0.02 & 0.20 & 0.04 & 0.10\\
+0.18 & 0.04 & 0.02 & 0.02\\
+0.10 & 0.10 & 0.02 & 0.06\\
+\end{bmatrix} \]
+
+\[B^{(2)}_1 = \begin{bmatrix}
+0.08 & 0.02 & 0.18 & 0.10\\
+0.02 & 0.20 & 0.04 & 0.10\\
+0.18 & 0.04 & 0.02 & 0.02\\
+0.10 & 0.10 & 0.02 & 0.06\\
+\end{bmatrix},
+%
+B^{(2)}_2 = \begin{bmatrix}
+0.16 & 0.16 & 0.04 & 0.10\\
+0.16 & 0.16 & 0.04 & 0.10\\
+0.04 & 0.04 & 0.09 & 0.02\\
+0.10 & 0.10 & 0.02 & 0.06\\
+\end{bmatrix},
+%
+B^{(2)}_3 = \begin{bmatrix}
+0.08 & 0.02 & 0.18 & 0.10\\
+0.02 & 0.20 & 0.04 & 0.10\\
+0.18 & 0.04 & 0.02 & 0.02\\
+0.10 & 0.10 & 0.02 & 0.06\\
+\end{bmatrix} \]
+
+\[B^{(3)}_1 = \begin{bmatrix}
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+\end{bmatrix},
+%
+B^{(3)}_2 = \begin{bmatrix}
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+\end{bmatrix},
+%
+B^{(3)}_3 = \begin{bmatrix}
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+0.08 & 0.08 & 0.08 & 0.08\\
+\end{bmatrix} \]
+
+In Figures \ref{fig:leftembeddings} and \ref{fig:rightembeddings}, the true latent position for each node is one of four points denoted with an orange $\times$ and the estimated latent positions for each community are plotted by color. The mean embedding for each group is denoted with a red dot. These simulations suggest that the desired stability properties are likely to apply. It also appears that our estimators for the latent positions are consistent and that the errors are normally distributed. Our comparisons of estimator variance for networks of different sizes in Figure \ref{fig:variance } appears to be roughly consistent with $1/n$ scaling which along with the Q-Q plots in Figure \ref{fig:qqplots} is consistent with the central limit theorem we aim to prove.
