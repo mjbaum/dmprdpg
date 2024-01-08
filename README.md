@@ -12,7 +12,7 @@ $$ \textbf{A} = \begin{bmatrix}
 \textbf{A}_{1,1} & \dots & \textbf{A}_{1,T}\\
 \vdots & \ddots & \vdots \\
 \textbf{A}_{K,1} & \dots & \textbf{A}_{K,T}
-\end{bmatrix} .$$
+\end{bmatrix} $$.
 
 In order to estimate the latent positions $\textbf{X}$ and $\textbf{Y}$ from the realized matrix $\textbf{A}$, we propose Doubly Unfolded Adjacency Spectral Embedding (DUASE) for dynamic multiplex graphs. Given the realized adjacency matrices $\textbf{A}_{k,t}$ $k = 1,\dots , K$ and $t = 1,\dots , T$ we make use of a truncated SVD of rank $d$ to obtain a low-rank approximation of the doubly unfolded matrix $\textbf{A}$ as $\textbf{A} \approx \textbf{UDV}^{\intercal}$ where $\textbf{D}$ contains the top $d$ singular values on the diagonal and $\textbf{U}$ and $\textbf{V}$ contain the corresponding singular vectors. The estimates for the latent positions for each node are recovered according to 
 
