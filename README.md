@@ -7,7 +7,7 @@ We consider the case of an undirected network with $K$ layers observed at $T$ po
 
 ## Methodology
 
-Given a set of adjacency matrices $\textbf{A}_{k,t} \in {0,1}^{n \times n}$ we define the adjacency unfolding $\textbf{A} \in \{0,1\}^{nK \times nT}$ as:  
+Given a set of adjacency matrices $\textbf{A}_{k,t} \in \{0,1\}^{n \times n}$ we define the adjacency unfolding $\textbf{A} \in \{0,1\}^{nK \times nT}$ as:  
 ```math
 \textbf{A} = 
 \begin{bmatrix}
