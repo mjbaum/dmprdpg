@@ -7,8 +7,7 @@ We consider the case of an undirected network with $K$ layers observed at $T$ po
 
 ## Methodology
 
-Given a set of adjacency matrices $\textbf{A}_{k,t} \in \{0,1\}^{n \times n}$ we define the adjacency unfolding $\textbf{A} \in \{0,1\}^{nK \times nT}$ as 
-$$ \textbf{A} = \begin{bmatrix} \textbf{A}_{1,1} & \dots & \textbf{A}_{1,T}\\ \vdots & \ddots & \vdots \\ \textbf{A}_{K,1} & \dots & \textbf{A}_{K,T} \end{bmatrix} $$.
+Given a set of adjacency matrices $\textbf{A}_{k,t} \in \{0,1\}^{n \times n}$ we define the adjacency unfolding $\textbf{A} \in \{0,1\}^{nK \times nT}$ as .
 
 In order to estimate the latent positions $\textbf{X}$ and $\textbf{Y}$ from the realized matrix $\textbf{A}$, we propose Doubly Unfolded Adjacency Spectral Embedding (DUASE) for dynamic multiplex graphs. Given the realized adjacency matrices $\textbf{A}_{k,t}$ $k = 1,\dots , K$ and $t = 1,\dots , T$ we make use of a truncated SVD of rank $d$ to obtain a low-rank approximation of the doubly unfolded matrix $\textbf{A}$ as $\textbf{A} \approx \textbf{UDV}^{\intercal}$ where $\textbf{D}$ contains the top $d$ singular values on the diagonal and $\textbf{U}$ and $\textbf{V}$ contain the corresponding singular vectors. The estimates for the latent positions for each node are recovered according to 
 
