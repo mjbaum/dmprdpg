@@ -20,7 +20,7 @@ Given a set of adjacency matrices $\textbf{A}_{k,t} \in \{0,1\}^{n \times n}$ we
 \end{bmatrix}.
 ```
 
-In order to estimate the latent positions $\textbf{X}$ and $\textbf{Y}$ from the realized matrix $\textbf{A}$, we propose Doubly Unfolded Adjacency Spectral Embedding (DUASE) for dynamic multiplex graphs. Given the realized adjacency matrices $\textbf{A}_{k,t}$ $k = 1,\dots , K$ and $t = 1,\dots , T$ we make use of a truncated SVD of rank $d$ to obtain a low-rank approximation of the doubly unfolded matrix $\textbf{A}$ as $\textbf{A} \approx \textbf{UDV}^{\intercal}$ where $\textbf{D}$ contains the top $d$ singular values on the diagonal and $\textbf{U}$ and $\textbf{V}$ contain the corresponding singular vectors. The estimates for the latent positions for each node are recovered according to 
+In order to estimate the latent positions $\textbf{X}$ and $\textbf{Y}$, we propose Doubly Unfolded Adjacency Spectral Embedding (DUASE) for dynamic multiplex graphs. Given the realized adjacency matrices $\textbf{A}_{k,t}$ $k = 1,\dots , K$ and $t = 1,\dots , T$ we make use of a truncated SVD of rank $d$ to obtain a low-rank approximation of the doubly unfolded matrix $\textbf{A}$ as $\textbf{A} \approx \textbf{UDV}^{\intercal}$ where $\textbf{D}$ contains the top $d$ singular values on the diagonal and $\textbf{U}$ and $\textbf{V}$ contain the corresponding singular vectors. The estimates for the latent positions for each node are recovered according to 
 
 $$\hat{\textbf{X}} = \textbf{UD}^{1/2}, \hspace{1cm} \hat{\textbf{Y}} = \textbf{VD}^{1/2}.$$
 
