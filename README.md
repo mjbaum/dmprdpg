@@ -100,27 +100,38 @@ B^{(3)}_3 = \begin{bmatrix}
 ```
 In the figures below, the true latent position for each node is one of four points denoted with an orange $\times$ and the estimated latent positions for each community are plotted by color. The mean embedding for each group is denoted with a red dot. These simulations show that our estimates for each group are generally clustered around the true latent positions and suggest that the desired stability properties are likely to apply. 
 
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3758e888-c3ac-4777-a9c8-7e5ab7629e0e" width="300" alt="Left Embedding Layer 1" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c0655af-f97e-4a5d-b3bc-805b99c391b4" width="300" alt="Left Embedding Layer 2" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/481bc902-554d-465c-95ab-9faf2c7000d4" width="300" alt="Left Embedding Layer 3" hspace="5"/>
-<br/>
 
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/502c8497-aa6e-435b-ab9c-be4a8d41c748" width="300" alt="Right Embedding Time 1" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/e8c72cf4-1199-41c5-a074-fca75909785f" width="300" alt="Right Embedding Time 2" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/a38c4784-b27f-4935-941f-c3ae55700f06" width="300" alt="Right Embedding Time 3" hspace="5"/>
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+<table>
+  <tr>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3758e888-c3ac-4777-a9c8-7e5ab7629e0e" width="300" </td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c0655af-f97e-4a5d-b3bc-805b99c391b4" width="300"</td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/481bc902-554d-465c-95ab-9faf2c7000d4" width="300"</td>
+  </tr>
+ </table>
 
+ <table>
+  <tr>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/502c8497-aa6e-435b-ab9c-be4a8d41c748" width="300" </td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/e8c72cf4-1199-41c5-a074-fca75909785f" width="300"</td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/a38c4784-b27f-4935-941f-c3ae55700f06" width="300"</td>
+  </tr>
+ </table>
 
 
 It also appears that our estimators for the latent positions have normally distributed errors and a comparison of estimator variance for networks of different sizes appears to be roughly consistent with $1/n$ scaling. These results are consistent with the central limit theorem we aim to prove.
+<table>
+  <tr>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/44dda3fe-6cf1-4d5f-b988-693ef16213a4" width="450" </td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c481992-ae18-49c1-8b8c-2f87882a74d9" width="450" </td>
+  </tr>
+ </table>
+<table>
+  <tr>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/456ca546-ad08-48fe-bd93-ea2d6930e64a" width="300" </td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3d765b24-e025-4f02-af3f-b5e50c25c4b3" width="300"</td>
+    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/713e5b83-84fa-4192-b74b-2849a15541ff" width="300"</td>
+  </tr>
+ </table>
 
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/44dda3fe-6cf1-4d5f-b988-693ef16213a4" width="450" alt="Left Variance" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c481992-ae18-49c1-8b8c-2f87882a74d9" width="450" alt="Right Variance" hspace="0"/>
-<br/>
-
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/456ca546-ad08-48fe-bd93-ea2d6930e64a" width="300" alt="QQ 1" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3d765b24-e025-4f02-af3f-b5e50c25c4b3" width="300" alt="QQ 2" hspace="5"/>
-<img align="left" src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/713e5b83-84fa-4192-b74b-2849a15541ff" width="300" alt="QQ 3" hspace="0"/>
-<br/>
 
 
