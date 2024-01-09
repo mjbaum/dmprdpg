@@ -99,3 +99,9 @@ B^{(3)}_3 = \begin{bmatrix}
 \end{bmatrix} 
 ```
 In Figures \ref{fig:leftembeddings} and \ref{fig:rightembeddings}, the true latent position for each node is one of four points denoted with an orange $\times$ and the estimated latent positions for each community are plotted by color. The mean embedding for each group is denoted with a red dot. These simulations suggest that the desired stability properties are likely to apply. It also appears that our estimators for the latent positions are consistent and that the errors are normally distributed. Our comparisons of estimator variance for networks of different sizes in Figure \ref{fig:variance } appears to be roughly consistent with $1/n$ scaling which along with the Q-Q plots in Figure \ref{fig:qqplots} is consistent with the central limit theorem we aim to prove.
+
+![Left Embedding Layer 1]([http://url/to/img.png](https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3758e888-c3ac-4777-a9c8-7e5ab7629e0e)https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3758e888-c3ac-4777-a9c8-7e5ab7629e0e)
+![Left Embedding Layer 2]([http://url/to/img.png](https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c0655af-f97e-4a5d-b3bc-805b99c391b4)https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c0655af-f97e-4a5d-b3bc-805b99c391b4)
+![Left Embedding Layer 3]([http://url/to/img.png](https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/481bc902-554d-465c-95ab-9faf2c7000d4)https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/481bc902-554d-465c-95ab-9faf2c7000d4)
+
+
