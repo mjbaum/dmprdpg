@@ -1,7 +1,9 @@
+
 from helpers import generate_adjacency_matrix, get_embedding, generate_group_labels, group_by_label
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import statsmodels.api as sm
+import pylab as py
 from scipy.linalg import orthogonal_procrustes
 
 
@@ -33,7 +35,6 @@ class Dynamic_Multilayer_SBM:
             final_long = np.concatenate(curr_long, axis=1)
             list_longs.append(final_long)
         final_embedding = np.concatenate(list_longs, axis=0)
-        print(np.shape(final_embedding))
         self.A = final_embedding
         left_embedding = get_embedding(final_embedding, type='left')
         self.left_embedding = left_embedding
@@ -51,7 +52,6 @@ class Dynamic_Multilayer_SBM:
             final_long = np.concatenate(curr_long, axis=1)
             list_longs.append(final_long)
         final_embedding = np.concatenate(list_longs, axis=0)
-        print(np.shape(final_embedding))
         self.left_embedding_theo = get_embedding(final_embedding, type='left')
         self.right_embedding_theo = get_embedding(final_embedding, type='right')
         self.rotate()
@@ -88,6 +88,16 @@ class Dynamic_Multilayer_SBM:
                 start += size
             plt.bar(x = range(len(self.groups)), height = variances, color = 'darkblue')
             plt.title("Community Variances Layer " + str(layer+1))
+            plt.show()
+        for time in range(self.timesteps):
+            current_time = self.right_embedding[num_nodes*time:num_nodes*(time+1), :]
+            start = 0
+            variances = []
+            for size in self.groups:
+                variances.append(sum(np.var(current_time[start:start + size, :], axis=0)))
+                start += size
+            plt.bar(x = range(len(self.groups)), height = variances, color = 'darkblue')
+            plt.title("Community Variances Time " + str(time+1))
             plt.show()
 
 
@@ -139,6 +149,20 @@ class Dynamic_Multilayer_SBM:
             plt.title("Right Embedding Time " + str(time+1))
             plt.show()
 
+    def qq_plot(self):
+        num_nodes = sum(self.groups)
+        for layer in range(self.layers):
+            current_layer = self.left_embedding[num_nodes * layer:num_nodes * (layer + 1), :]
+            start = 0
+            for size in self.groups:
+                community = current_layer[start:start + size, :]
+                mean = np.mean(community, axis=0)
+                community = community - mean
+                for dimension in range(4):
+                    sm.qqplot(community[:, dimension], fit=True, line=45)
+                    py.show()
+                start += size
+
 
 
 
@@ -157,10 +181,11 @@ if __name__ == '__main__':
         (2, 1): [[0.08, 0.08, 0.08, 0.08], [0.08, 0.08, 0.08, 0.08], [0.08, 0.08, 0.08, 0.08], [0.08, 0.08, 0.08, 0.08]],
         (2, 2): [[0.08, 0.08, 0.08, 0.08], [0.08, 0.08, 0.08, 0.08], [0.08, 0.08, 0.08, 0.08], [0.08, 0.08, 0.08, 0.08]]
     }
-    model = Dynamic_Multilayer_SBM(layers=3, timesteps=3, groups=[250,250,250,250], prob_dict=B_dict)
+    model = Dynamic_Multilayer_SBM(layers=3, timesteps=3, groups=[25,25,25,25], prob_dict=B_dict)
     model.sample()
     model.get_centroids()
     model.get_centroids_theo()
+    #model.qq_plot()
     model.plot()
 
     B_dict = {
@@ -169,7 +194,7 @@ if __name__ == '__main__':
         (1, 0): [[0.06, 0.18, 0.04, 0.04], [0.18, 0.12, 0.04, 0.04], [0.04, 0.04, 0.02, 0.02], [0.04, 0.04, 0.02, 0.02]],
         (1, 1): [[0.16, 0.16, 0.04, 0.04], [0.16, 0.16, 0.04, 0.04], [0.04, 0.04, 0.02, 0.02], [0.04, 0.04, 0.02, 0.02]],
     }
-    model2 = Dynamic_Multilayer_SBM(layers=2, timesteps=2, groups=[250,250,250,200], prob_dict=B_dict)
+    model2 = Dynamic_Multilayer_SBM(layers=2, timesteps=2, groups=[250,250,250,250], prob_dict=B_dict)
     model2.sample()
     model2.get_centroids()
     model2.get_centroids_theo()
