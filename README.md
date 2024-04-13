@@ -1,4 +1,17 @@
-# Dynamic Multiplex Embedding
+# Spectral embedding of dynamic multiplex networks
+
+This repository contains a _Python_ library supporting the work on spectral embedding of dynamic multiplex graphs by Maximilian Baum, Francesco Sanna Passino, and Axel Gandy (Department of Mathematics, Imperial College London). 
+
+The library `dmprdpg` can be installed in edit mode as follows:
+```
+pip3 install -e lib/
+```
+The library can then be imported in any _Python_ session:
+```python3
+import dmprdpg
+```
+
+A demo on how to use the library can be found in `notebooks/test_library.ipynb`.
 
 In this work, we explore a spectral embedding method for dynamic graphs with multiple layers. The base model for this work is a network in which a set of shared nodes exhibit connections across a number of different layers and this multiplex network is observed at a fixed number of points in time. We extend the theory of Unfolded Adjacency Spectral Embedding (UASE) to the dynamic case and plan to provide stability guarantees as well as a central limit theorem.
 
