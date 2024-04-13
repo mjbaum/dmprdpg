@@ -1,4 +1,4 @@
-from helpers import generate_adjacency_matrix, get_embedding, generate_group_labels, group_by_label
+from .helpers import generate_adjacency_matrix, get_embedding, generate_group_labels, group_by_label
 import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm

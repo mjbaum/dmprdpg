@@ -9,5 +9,8 @@ setup(
 	install_requires=[
 		"numpy",
 		"scipy",
+        "networkx",
+        "statsmodels",
+        "matplotlib"
 	],
 )
