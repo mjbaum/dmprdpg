@@ -1,4 +1,3 @@
-
 from helpers import generate_adjacency_matrix, get_embedding, generate_group_labels, group_by_label
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,11 +7,22 @@ from scipy.linalg import orthogonal_procrustes
 
 class dmpsbm:
 
+    # Initialize the model with the number of layers, timesteps, groups, and the dictionary of probabilities
     def __init__(self, layers, timesteps, groups, prob_dict):
+        # Store the model parameters (after checking that they are valid)
+        if not isinstance(layers, int) or layers <= 0:
+            raise ValueError("The number of layers must be a positive integer")
         self.layers = layers
+        if not isinstance(timesteps, int) or timesteps <= 0:
+            raise ValueError("The number of timesteps must be a positive integer")
         self.timesteps = timesteps
+        if not isinstance(groups, list) or len(groups) == 0 or not all(isinstance(x, int) for x in groups):
+            raise ValueError("The groups must be a non-empty list of integers")
         self.groups = groups
+        if not isinstance(prob_dict, dict) or not all(isinstance(key, tuple) and len(key) == 2 and isinstance(value, list) for key, value in prob_dict.items()):
+            raise ValueError("The probability dictionary must be a dictionary with keys as tuples and values as lists")
         self.prob_dict = prob_dict
+        # Initialize other model attributes to None
         self.A = None
         self.left_embedding = None
         self.right_embedding = None
@@ -24,6 +34,7 @@ class dmpsbm:
         self.rotation_right = None
         self.error = 0
 
+    # Sample the adjacency matrices and calculate the embeddings
     def sample(self):
         list_longs = []
         for i in range(self.layers):
@@ -40,7 +51,7 @@ class dmpsbm:
         right_embedding = get_embedding(final_embedding, type='right')
         self.right_embedding = right_embedding
 
-
+    # Calculate the theoretical embeddings and rotate them to match the sampled embeddings
     def get_centroids_theo(self):
         list_longs = []
         for i in range(self.layers):
@@ -55,6 +66,7 @@ class dmpsbm:
         self.right_embedding_theo = get_embedding(final_embedding, type='right')
         self.rotate()
 
+    # Calculate the rotation matrices to align the theoretical embeddings with the sampled embeddings
     def get_rotation(self):
         left_stacked = np.concatenate(self.left_centroids, axis = 0)
         rotation = orthogonal_procrustes(self.left_embedding_theo, left_stacked)[0]
@@ -63,6 +75,7 @@ class dmpsbm:
         rotation = orthogonal_procrustes(self.right_embedding_theo, right_stacked)[0]
         self.rotation_right = rotation
 
+    # Rotate the theoretical embeddings to match the sampled embeddings
     def rotate(self):
         self.get_rotation()
         self.left_embedding_theo = self.left_embedding_theo @ self.rotation_left
@@ -70,12 +83,14 @@ class dmpsbm:
         self.calculate_error()
         print("Total Error: ", self.error)
 
+    # Calculate the error between the sampled and theoretical embeddings
     def calculate_error(self):
         left_stacked = np.concatenate(self.left_centroids, axis=0)
         right_stacked = np.concatenate(self.right_centroids, axis=0)
         self.error = sum(sum((self.left_embedding_theo - left_stacked)**2)) + sum(sum((self.right_embedding_theo - right_stacked)**2))
         self.calculate_variance()
 
+    # Calculate the variance of the embeddings within each community
     def calculate_variance(self):
         num_nodes = sum(self.groups)
         for layer in range(self.layers):
@@ -99,6 +114,7 @@ class dmpsbm:
             plt.title("Community Variances Time " + str(time+1))
             plt.show()
 
+    # Calculate the centroids of the communities in the embeddings
     def get_centroids(self):
         left_centroids = []
         right_centroids = []
@@ -122,6 +138,7 @@ class dmpsbm:
             right_centroids.append(current_embeddings)
         self.right_centroids = right_centroids
 
+    # Plot the embeddings and centroids
     def plot(self):
         total_nodes  = sum(self.groups)
         num_groups = len(self.groups)
@@ -144,6 +161,7 @@ class dmpsbm:
             plt.title("Right Embedding Time " + str(time+1))
             plt.show()
 
+    # Generate a QQ plot for the embeddings (marginally for each dimension)
     def qq_plot(self):
         num_nodes = sum(self.groups)
         for layer in range(self.layers):
