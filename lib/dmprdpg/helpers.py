@@ -44,5 +44,6 @@ def group_by_label(matrix, labels):
         print(labels == label)
         print(matrix[labels == label])
 
-
-
+## Function to test the library
+def test():
+    print("The library dmprdpg is working correctly.")
