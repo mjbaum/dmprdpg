@@ -65,7 +65,7 @@ def sparse_svd(A_tilde, d):
 
 ## Obtain embeddings from the singular value decomposition
 def get_embeddings(U, S, V):
-    return U @ np.diag(np.sqrt(S), V @ np.diag(np.sqrt(S)))
+    return U @ np.diag(np.sqrt(S)), V @ np.diag(np.sqrt(S))
 
 ## Unstack embeddings
 def extract_and_concatenate(matrix, n, K):
