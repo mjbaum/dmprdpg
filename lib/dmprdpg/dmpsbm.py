@@ -7,7 +7,7 @@ from scipy.linalg import orthogonal_procrustes
 from scipy.sparse import coo_matrix
 
 ## Simulate a DMP-SBM model
-def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None):
+def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None, seed=None):
     # Initialise number of layers and time steps from B[0,0] (if present)
     if (0,0) in B_dict:
         G = B_dict[0,0].shape[0]
@@ -44,6 +44,9 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None):
             raise ValueError("Priors must sum to 1")
         if not all(p >= 0 for p in prior_T):
             raise ValueError("Priors must be non-negative")
+    ## Set seed if provided
+    if seed is not None:
+        np.random.seed(seed)
     ## Generate the group labels
     z = np.random.choice(range(G), size=n, p=prior_K)
     z_prime = np.random.choice(range(G_prime), size=n, p=prior_T)
