@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 import numpy as np
 from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import floyd_warshall
+from scipy.sparse.csgraph import floyd_warshall, connected_components
 from scipy.spatial import distance_matrix
 
 ## Get in input a matrix of size (n,d,K) and return a matrix of size (K,K) with the Euclidean distance
-def distance_matrix_tensor(Y):
+def distance_matrix_tensor(Y, ord=2):
     n, _, K = Y.shape
     D = np.zeros((K,K))
     for i in range(K):
         for j in range(i+1,K):
-            D[
-                i,j] = np.linalg.norm(Y[:,:,i] - Y[:,:,j]) / np.sqrt(n)
+            D[i,j] = np.linalg.norm(Y[:,:,i] - Y[:,:,j], ord=ord) / np.sqrt(n)
             D[j,i] = D[i,j]
     return D
 
@@ -23,22 +22,48 @@ def cmds(D, n_components=2):
     eigvals, eigvecs = np.linalg.eigh(B)
     return eigvecs[:,::-1][:,:n_components] @ np.diag(np.sqrt(eigvals[::-1][:n_components]))
 
+# Function to check if the graph is connected
+def is_connected(graph):
+    n_components, _ = connected_components(csgraph=graph, directed=False, return_labels=True)
+    return n_components == 1
+
 ## Function to calculate ISO-MAP
-def isomap(X, n_neighbors, n_components=1):
+def isomap(X, n_neighbors=None, n_components=1, verbose=False):
     """ Perform ISOMAP on dataset X.
     Parameters:
     X : ndarray of shape (n_samples, n_features)
-    n_neighbors : int (the number of neighbors to consider for each point)
+    n_neighbors : int, default None (the number of neighbors to consider for each point)
     n_components : int, default 1 (The number of dimensions in which to embed the dataset)
+    verbose : bool, default False (Whether to print the number of neighbors)
     """
-    # Step 1: Compute the full pairwise distance matrix
+    # Step 1: Compute the full pairwise distance matrix and number of neighbours (if not provided)
     D = distance_matrix(X, X)
+    n = D.shape[0]
+    # If n_neighbors is not specified, find the smallest number of neighbors
+    if n_neighbors is None:
+        n_neighbors = 1
+        while True:
+            knn_distances = np.sort(D, axis=1)[:, 1:n_neighbors+1]
+            knn_indices = np.argsort(D, axis=1)[:, 1:n_neighbors+1]
+            # Construct the neighborhood graph (sparse matrix)
+            graph = np.zeros((n, n))
+            for i in range(n):
+                graph[i, knn_indices[i]] = knn_distances[i]
+            # Symmetrize the graph
+            graph = np.minimum(graph, graph.T)
+            # Check if the graph is connected
+            sparse_graph = csr_matrix(graph)
+            if is_connected(sparse_graph):
+                break
+            n_neighbors += 1
+        if verbose: 
+            print(f"ISOMAP n_neighbors = {n_neighbors}")
     # Step 2: Find the k-nearest neighbors for each point
     knn_distances = np.sort(D, axis=1)[:, 1:n_neighbors+1]
     knn_indices = np.argsort(D, axis=1)[:, 1:n_neighbors+1]
     # Step 3: Construct the neighborhood graph (sparse matrix)
     n = X.shape[0]
-    graph = np.inf * np.ones((n, n))
+    graph = np.zeros((n, n))
     for i in range(n):
         graph[i, knn_indices[i]] = knn_distances[i]
     # Symmetrize the graph
@@ -52,10 +77,10 @@ def isomap(X, n_neighbors, n_components=1):
     return Y
 
 ## Full procedure to obtain the mirror
-def mirror(Y, n_neighbors, n_components_cmds=2, n_components_isomap=1):
+def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=False):
     ## Calculate distance matrix
     D = distance_matrix_tensor(Y)
     ## Apply classic multidimensional scaling
     U = cmds(D, n_components=n_components_cmds)
     ## Return ISOMAP
-    return isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap)
+    return isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
