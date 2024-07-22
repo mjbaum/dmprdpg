@@ -2,6 +2,7 @@
 import numpy as np
 from scipy.sparse import bmat, coo_matrix, csr_matrix
 from scipy.sparse.linalg import svds
+from scipy.stats import norm
 
 ## Define a function to perform the double unfolding into a block matrix
 def double_unfolding(matrix_dict, rows, cols, n, output='sparse'):
@@ -93,12 +94,59 @@ def extract_and_concatenate(matrix, n, K):
     # Return the resulting tensor
     return tensor
 
+## Calculate elbow of the scree-plot using the criterion of Zhu and Ghodsi (2006)
+def zhu(d):
+    d = np.sort(d)[::-1]
+    p = len(d)
+    profile_likelihood = np.zeros(p)
+    for q in range(1,p-1):
+        mu1 = np.mean(d[:q])
+        mu2 = np.mean(d[q:])
+        sd = np.sqrt(((q-1) * (np.std(d[:q]) ** 2) + (p-q-1) * (np.std(d[q:]) ** 2)) / (p-2))
+        profile_likelihood[q] = norm.logpdf(d[:q], loc=mu1, scale=sd).sum() + norm.logpdf(d[q:], loc=mu2, scale=sd).sum()
+    return profile_likelihood[1:(p-1)], np.argmax(profile_likelihood[1:(p-1)]) + 1
+
+## Find the first x elbows of the scree-plot, iterating the criterion of Zhu and Ghodsi (2006)
+def iterate_zhu(d, x=4):
+    results = np.zeros(x,dtype=int)
+    results[0] = zhu(d)[1]
+    for i in range(x-1):
+        results[i+1] = results[i] + zhu(d[results[i]:])[1]
+    return results
+
+## Eigengap
+def eigengap(S, x=4):
+    Q = np.argsort(np.diff(np.sort(S)[::-1]))
+    # Get the first 4 numbers of Q, but discard a value if it's smaller than *any* value that came before it
+    Q_mod = np.zeros(len(Q), dtype=int)
+    Q_mod[0] = Q[0]
+    for i in range(1, len(Q)):
+        Q_mod[i] = 0 if Q[i] < np.max(Q[:i]) else Q[i]
+    ## Remove zeros from Q_mod
+    Q_mod = Q_mod[Q_mod != 0]
+    ## Return indices for the first x eigengaps
+    return Q_mod[:x] + 1
+
+## Visualise singular values of A_tilde
+def singular_values_A_tilde(A_dict, K, T, d_max=100):
+    n = A_dict[(0,0)].shape[0]
+    A_tilde = double_unfolding(A_dict, K, T, n, output='sparse')
+    _, S, _ = sparse_svd(A_tilde, d_max)
+    return S
+
 ## Doubly unfolded adjacency spectral embedding (DUASE)
-def duase(A_dict, K, T, d):
+def duase(A_dict, K, T, d=None, zhu_order=1):
     # Get the size of the matrices
     n = A_dict[(0,0)].shape[0]
     # Perform the double unfolding
     A_tilde = double_unfolding(A_dict, K, T, n, output='sparse')
+    # If the number of components is not specified, use the Zhu and Ghodsi criterion
+    if d is None:
+        _, S, _ = svds(A_tilde, k=100)
+        d = iterate_zhu(S, x=zhu_order)
+        return S
+        #print(d)
+        #d = d[0]
     # Perform the truncated SVD
     U, S, V = sparse_svd(A_tilde, d)
     # Obtain the embeddings
