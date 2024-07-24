@@ -3,3 +3,5 @@ notebooks/.ipynb_checkpoints/
 */.DS_Store
 */*/.DS_Store
 lib/dmprdpg/__pycache__/
+data/FinDKG/
+data/README*
