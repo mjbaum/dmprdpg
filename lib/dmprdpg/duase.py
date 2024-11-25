@@ -206,9 +206,9 @@ def eigengap(S, x=4):
     return Q_mod[:x] + 1
 
 ## Visualise singular values of A_tilde
-def singular_values_A_tilde(A_dict, K, T, d_max=100):
+def singular_values_A_tilde(A_dict, K, T, mode='blanket', lead_order='row', d_max=100):
     n = A_dict[(0,0)].shape[0]
-    A_tilde = double_unfolding(A_dict, K, T, n, output='sparse')
+    A_tilde = double_unfolding(A_dict, K, T, n, mode=mode, lead_order=lead_order, output='sparse')
     _, S, _ = sparse_svd(A_tilde, d_max)
     return S
 
