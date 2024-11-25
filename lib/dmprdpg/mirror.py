@@ -3,6 +3,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import floyd_warshall, connected_components
 from scipy.spatial import distance_matrix
+import itertools
 
 ## Get in input a matrix of size (n,d,K) and return a matrix of size (K,K) with the Euclidean distance
 def distance_matrix_tensor(Y, ord=2):
@@ -12,6 +13,30 @@ def distance_matrix_tensor(Y, ord=2):
         for j in range(i+1,K):
             D[i,j] = np.linalg.norm(Y[:,:,i] - Y[:,:,j], ord=ord) / np.sqrt(n)
             D[j,i] = D[i,j]
+    return D
+
+## Function to generate cross pairs
+def cross_pairs(A, B):
+    return list(itertools.product(range(A), range(B)))
+
+## Get in input a matrix of size (n,d,K,T) and return a matrix of size (KT,KT) with the Euclidean distance
+def distance_matrix_tensor(Y, ord=2):
+    n, _, K, T = Y.shape
+    D = np.zeros((K * T, K * T))
+    ## Calculate all cross pairs of K and T
+    pairs = cross_pairs(K, T)
+    ## Pre-define the distance matrix
+    D = np.zeros((K * T, K * T))
+    ## Loop over all pairs and calculate the distance
+    for q, pair in enumerate(pairs):
+        k, t = pair[0], pair[1]
+        for q_prime, pair_prime in enumerate(pairs):
+            if q_prime > q:
+                k_prime, t_prime = pair_prime[0], pair_prime[1]
+                ## Calculate the distance
+                D[q, q_prime] += np.linalg.norm(Y[:,:,k,t] - Y[:,:,k_prime,t_prime], ord=ord) / np.sqrt(n)
+                D[q_prime, q] = D[q, q_prime]
+    ## Return the distance matrix
     return D
 
 ## Apply classic multidimensional scaling to the distance matrix
@@ -77,10 +102,18 @@ def isomap(X, n_neighbors=None, n_components=1, verbose=False):
     return Y
 
 ## Full procedure to obtain the mirror
-def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=False):
+def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=False, ord='fro'):
     ## Calculate distance matrix
-    D = distance_matrix_tensor(Y)
+    D = distance_matrix_tensor(Y, ord=ord)
     ## Apply classic multidimensional scaling
     U = cmds(D, n_components=n_components_cmds)
     ## Return ISOMAP
     return isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
+
+## Reshape output of CMDS if needed
+def reshape_cmds(U, K, T):
+    return U.reshape(K, T, -1)
+
+## Reshape the mirror to the original shape
+def reshape_mirror(M, K, T):
+    return M.reshape(K, T)
