@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import numpy as np
 from scipy.sparse import bmat, coo_matrix, csr_matrix
-from scipy.sparse.linalg import svds
+from scipy.sparse.linalg import svds, eigsh
 from scipy.stats import norm
+
 
 ## Long unfolding (totem, scarf, or blanket)
 def double_unfolding(matrix_dict, rows, cols, n, mode='blanket', lead_order='row', output='sparse'):
@@ -14,19 +15,13 @@ def double_unfolding(matrix_dict, rows, cols, n, mode='blanket', lead_order='row
     elif mode == 'totem':
         matrix_grid = [[None] for _ in range(rows * cols)]
     elif mode == 'scarf':
-        matrix_grid = [[[None for _ in range(rows * cols)]]]
+        matrix_grid = [[None for _ in range(rows * cols)]]
     # Check if all row and column indices are in the correct range
     if not all(row_idx in range(rows) and col_idx in range(cols) for row_idx, col_idx in matrix_dict.keys()):
         raise ValueError("Row and column indices must be in the range [0, rows) and [0, cols) respectively")
     # Check if all indices are covered
     if not all((row_idx, col_idx) in matrix_dict for row_idx in range(rows) for col_idx in range(cols)):
         raise ValueError("Matrix dictionary must contain all indices in the range [0, rows) x [0, cols)")
-    # If 'totem' mode is used, find the total number of row_idx
-    if mode == 'totem':
-        M = sum(matrix.shape[0] for matrix in matrix_dict.values())
-    # If 'scarf' mode is used, find the total number of col_idx
-    if mode == 'scarf':
-        M = sum(matrix.shape[1] for matrix in matrix_dict.values())
     # Fill the grid with matrices from the dictionary
     for (row_idx, col_idx), matrix in matrix_dict.items():
         if matrix.shape != (n, n):
@@ -37,14 +32,14 @@ def double_unfolding(matrix_dict, rows, cols, n, mode='blanket', lead_order='row
             matrix_grid[row_idx][col_idx] = matrix
         elif mode == 'totem':
             if lead_order == 'row':
-                matrix_grid[row_idx * M + col_idx][0] = matrix
+                matrix_grid[row_idx * cols + col_idx][0] = matrix
             else: 
-                matrix_grid[row_idx + col_idx * M][0] = matrix
+                matrix_grid[row_idx + col_idx * rows][0] = matrix
         elif mode == 'scarf':
             if lead_order == 'row':
-                matrix_grid[0][row_idx * M + col_idx] = matrix
+                matrix_grid[0][row_idx * cols + col_idx] = matrix
             else:
-                matrix_grid[0][row_idx + col_idx * M] = matrix
+                matrix_grid[0][row_idx + col_idx * rows] = matrix
     # Create the block matrix
     if output == 'sparse':
         # Use sparse block matrix assembly
@@ -54,6 +49,33 @@ def double_unfolding(matrix_dict, rows, cols, n, mode='blanket', lead_order='row
         A_tilde = np.bmat(matrix_grid).A  # .A converts to a dense numpy array
     # Return output
     return A_tilde
+
+## Average all matrices in matrix_dict to create a single matrix for each value of t
+def average_matrices(matrix_dict, rows, cols, n, include_zero=True):
+    if len(matrix_dict) != rows * cols:
+        raise ValueError("Number of matrices in the dictionary must match rows*cols")
+    # Check if all row and column indices are in the correct range
+    if not all(row_idx in range(rows) and col_idx in range(cols) for row_idx, col_idx in matrix_dict.keys()):
+        raise ValueError("Row and column indices must be in the range [0, rows) and [0, cols) respectively")
+    # Check if all indices are covered
+    if not all((row_idx, col_idx) in matrix_dict for row_idx in range(rows) for col_idx in range(cols)):
+        raise ValueError("Matrix dictionary must contain all indices in the range [0, rows) x [0, cols)")
+    # Check if all matrices have the same dimension
+    for (row_idx, col_idx), matrix in matrix_dict.items():
+        if matrix.shape != (n, n):
+            raise ValueError("All matrices must have the same dimension.")
+    # Pre-define smaller dictionary of matrices for each value of t
+    matrix_dict_t = {}
+    # Iterate over the columns to average the matrices
+    for col_idx in range(cols):
+        # Extract the matrices for the current value of t
+        matrices_t = [matrix_dict[(row_idx, col_idx)] for row_idx in range(rows)]
+        # Average the matrices
+        matrix_t = sum(matrices_t) / rows
+        # Store the matrix in the dictionary
+        matrix_dict_t[(0,col_idx) if include_zero else col_idx] = matrix_t
+    # Return the average matrices
+    return matrix_dict_t
 
 ## Inverse of the previous function, decomposes a doubly unfolded block matrix into a dictionary of submatrices
 def inverse_double_unfolding(A_tilde, n, K, T, lead_order='row', output='sparse'):
@@ -106,6 +128,16 @@ def sparse_svd(A_tilde, d):
     # Sort the singular values (and corresponding singular vectors) in descending order and return output
     return U[:,::-1], S[::-1], Vt[::-1].T
 
+## Function to perform the truncated eigendecomposition of a sparse matrix
+def sparse_eigendecomp(A_tilde, d):
+    # Check if the matrix is in an appropriate sparse format or convert it
+    if not isinstance(A_tilde, csr_matrix):
+        A_tilde = csr_matrix(A_tilde)  # Convert to CSR format if not already
+    # Compute the truncated eigendecomposition
+    S, U = eigsh(A_tilde, k=d, which='LA')
+    # Sort the eigenvalues (and corresponding eigenvectors) in descending order and return output (including embeddings)
+    return U[:,::-1], S[::-1], U[:,::-1] @ np.diag(np.sqrt(S[::-1]))
+
 ## Obtain embeddings from the singular value decomposition
 def get_embeddings(U, S, V):
     return U @ np.diag(np.sqrt(S)), V @ np.diag(np.sqrt(S))
@@ -135,7 +167,6 @@ def extract_and_concatenate(matrix, n, K):
     tensor = np.stack(matrices, axis=2)
     # Return the resulting tensor
     return tensor
-
 
 ## Unstack embeddings to obtain a four-dimensional tensor
 def extract_tensor(matrix, n, K, T, order='row'):
@@ -186,6 +217,7 @@ def zhu(d):
 
 ## Find the first x elbows of the scree-plot, iterating the criterion of Zhu and Ghodsi (2006)
 def iterate_zhu(d, x=4):
+    d = np.sort(d)[::-1]
     results = np.zeros(x,dtype=int)
     results[0] = zhu(d)[1]
     for i in range(x-1):
@@ -212,22 +244,38 @@ def singular_values_A_tilde(A_dict, K, T, mode='blanket', lead_order='row', d_ma
     _, S, _ = sparse_svd(A_tilde, d_max)
     return S
 
+## Visualise eigenvalues of A
+def eigenvalues_A(A, d_max=100):
+    # Check A is suitable
+    if not isinstance(A, csr_matrix):
+        A = csr_matrix(A)
+    # Perform the eigendecomposition
+    S, _ = eigsh(A, d_max)
+    return S
+
 ## Doubly unfolded adjacency spectral embedding (DUASE)
-def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', zhu_order=1, d_max=100, verbose=False):
+def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', d_selection='zhu', order=1, d_max=100, verbose=False):
     # Check if mode is admissible
     if mode not in ['blanket', 'scarf', 'totem']:
         return ValueError("Mode must be either 'blanket', 'scarf', or 'totem'")
     # Check if lead_order is admissible
     if lead_order not in ['row', 'column']:
         return ValueError("Lead order must be either 'row' or 'column'")
+    # Check if d_selection is admissible
+    if d_selection not in ['zhu', 'eigengap']:
+        return ValueError("d_selection must be either 'zhu' or 'eigengap'")
     # Get the size of the matrices
     n = A_dict[(0,0)].shape[0]
     # Perform the double unfolding
     A_tilde = double_unfolding(A_dict, K, T, n, mode=mode, lead_order=lead_order, output='sparse')
     # If the number of components is not specified, use the Zhu and Ghodsi criterion
     if d is None:
-        _, S, _ = svds(A_tilde, k=d_max)
-        d = iterate_zhu(S, x=zhu_order)
+        if d_selection == 'eigengap':
+            _, S, _ = svds(A_tilde, k=d_max)
+            d = eigengap(S, x=order)[-1]
+        elif d_selection == 'zhu':
+            _, S, _ = svds(A_tilde, k=d_max)
+            d = iterate_zhu(S, x=order)[-1]
         if verbose:
             print('Selected embedding dimension: ', d)
     # Perform the truncated SVD
@@ -244,3 +292,52 @@ def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', zhu_order=1, d
         X = extract_tensor(X, n, K, T, order=lead_order)
     # Return the left and right embeddings
     return X, Y
+
+## Calculate separate embeddings for each matrix in the dictionary
+def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', order=1, d_max=100, verbose=False, directed=False, double_index=True):
+    # Obtain n
+    n = matrix_dict[(0,0)].shape[0]
+    # Check if all row and column indices are in the correct range
+    if not all(row_idx in range(rows) and col_idx in range(cols) for row_idx, col_idx in matrix_dict.keys()):
+        raise ValueError("Row and column indices must be in the range [0, rows) and [0, cols) respectively")
+    # Check if all indices are covered
+    if not all((row_idx, col_idx) in matrix_dict for row_idx in range(rows) for col_idx in range(cols)):
+        raise ValueError("Matrix dictionary must contain all indices in the range [0, rows) x [0, cols)")
+    # Check if all matrices have the same dimension and are symmetric
+    for (row_idx, col_idx), matrix in matrix_dict.items():
+        if matrix.shape != (n, n):
+            raise ValueError("All matrices must have the same dimension.")
+        if not np.allclose(matrix, matrix.T):
+            raise ValueError("All matrices must be symmetric.")
+    # Get the size of the matrices
+    n = matrix_dict[(0,0)].shape[0]
+    # Initialize dictionaries to store the embeddings
+    X_dict = {}
+    if double_index:
+        for i in range(rows):
+            X_dict[i] = {}
+    if directed:
+        Y_dict = {}
+    # Iterate over the matrices and calculate the embeddings
+    for i in range(rows):
+        for j in range(cols):
+            # Perform the embedding for each matrix
+            if directed: 
+                X, Y = duase({(0,0): matrix_dict[(i,j)]}, 1, 1, d=d, d_selection=d_selection, order=order, d_max=d_max, verbose=verbose)
+                # Store the embeddings in the dictionaries
+                X_dict[(i,j)] = X
+                Y_dict[(i,j)] = Y
+            else:
+                # Perform the truncated eigendecomposition
+                d_hat = d if d is not None else iterate_zhu(eigenvalues_A(matrix_dict[(i,j)], d_max), x=order)[-1]
+                _, _, X = sparse_eigendecomp(matrix_dict[(i,j)], d=d_hat)
+                # Store the embeddings in the dictionaries
+                if double_index:
+                    X_dict[i][j] = X
+                else:
+                    X_dict[(i,j)] = X
+    # Return the dictionaries of embeddings
+    if directed:
+        return X_dict, Y_dict
+    else:
+        return X_dict
