@@ -238,23 +238,38 @@ def eigengap(S, x=4):
     return Q_mod[:x] + 1
 
 ## Visualise singular values of A_tilde
-def singular_values_A_tilde(A_dict, K, T, mode='blanket', lead_order='row', d_max=100):
+def singular_values_A_tilde(A_dict, K, T, mode='blanket', lead_order='row', d_max=None):
     n = A_dict[(0,0)].shape[0]
     A_tilde = double_unfolding(A_dict, K, T, n, mode=mode, lead_order=lead_order, output='sparse')
+    if d_max is None:
+        if mode == 'blanket':
+            d_max = n * min([K,T]) - 1
+        else:
+            d_max = n - 1
+    else:
+        ## Check suitability of d_max (integer)
+        if not isinstance(d_max, int):
+            raise ValueError("d_max must be an integer")
     _, S, _ = sparse_svd(A_tilde, d_max)
     return S
 
 ## Visualise eigenvalues of A
-def eigenvalues_A(A, d_max=100):
+def eigenvalues_A(A, d_max=None):
     # Check A is suitable
     if not isinstance(A, csr_matrix):
         A = csr_matrix(A)
+    # Check d_max is suitable
+    if d_max is None:
+        d_max = min(A.shape) - 1
+    else:
+        if not isinstance(d_max, int):
+            raise ValueError("d_max must be an integer")
     # Perform the eigendecomposition
     S, _ = eigsh(A, d_max)
     return S
 
 ## Doubly unfolded adjacency spectral embedding (DUASE)
-def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', d_selection='zhu', order=1, d_max=100, verbose=False):
+def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', d_selection='zhu', order=1, d_max=None, verbose=False):
     # Check if mode is admissible
     if mode not in ['blanket', 'scarf', 'totem']:
         return ValueError("Mode must be either 'blanket', 'scarf', or 'totem'")
@@ -268,6 +283,16 @@ def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', d_selection='z
     n = A_dict[(0,0)].shape[0]
     # Perform the double unfolding
     A_tilde = double_unfolding(A_dict, K, T, n, mode=mode, lead_order=lead_order, output='sparse')
+    # Check if d_max is specified and admissible
+    if d_max is None:
+        if mode == 'blanket':
+            d_max = n * min([K,T]) - 1
+        else:
+            d_max = n - 1
+    else:
+        ## Check suitability of d_max (integer)
+        if not isinstance(d_max, int):
+            raise ValueError("d_max must be an integer")
     # If the number of components is not specified, use the Zhu and Ghodsi criterion
     if d is None:
         if d_selection == 'eigengap':
@@ -294,7 +319,7 @@ def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', d_selection='z
     return X, Y
 
 ## Calculate separate embeddings for each matrix in the dictionary
-def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', order=1, d_max=100, verbose=False, directed=False, double_index=True):
+def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', order=1, d_max=None, verbose=False, directed=False, double_index=True):
     # Obtain n
     n = matrix_dict[(0,0)].shape[0]
     # Check if all row and column indices are in the correct range
@@ -311,6 +336,13 @@ def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', orde
             raise ValueError("All matrices must be symmetric.")
     # Get the size of the matrices
     n = matrix_dict[(0,0)].shape[0]
+    # Check if d_max is specified and admissible
+    if d_max is None:
+        d_max = n - 1
+    else:
+        ## Check suitability of d_max (integer)
+        if not isinstance(d_max, int):
+            raise ValueError("d_max must be an integer")
     # Initialize dictionaries to store the embeddings
     X_dict = {}
     if double_index:
