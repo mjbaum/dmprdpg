@@ -42,7 +42,7 @@ def double_unfolding(matrix_dict, rows, cols, n, mode='blanket', lead_order='row
                 matrix_grid[0][row_idx + col_idx * rows] = matrix
     # Create the block matrix
     if output == 'sparse':
-        # Use sparse block matrix assembly
+        # Use sparse block matrix assembly via bmat
         A_tilde = bmat(matrix_grid, format='csr')
     else:
         # Convert to dense if necessary

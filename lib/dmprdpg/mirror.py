@@ -146,7 +146,7 @@ def distance_matrix_separate(Y, ord=2):
         for j in range(i+1, T):
             ## Procrustes alignment of Y[j] onto Y[i]
             Y_tilde = Y[j] @ orthogonal_procrustes(Y[j], Y[i])[0]
-            D[i,j] = np.linalg.norm(Y[i] - Y_tilde, ord=ord)
+            D[i,j] = np.linalg.norm(Y[i] - Y_tilde, ord=ord) / np.sqrt(Y[i].shape[0])
             D[j,i] = D[i,j]
     ## Return the distance matrix
     return D
