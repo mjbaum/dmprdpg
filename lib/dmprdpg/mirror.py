@@ -7,6 +7,7 @@ from scipy.linalg import orthogonal_procrustes
 from sklearn.manifold import MDS, Isomap
 from sklearn.manifold import Isomap
 import itertools
+from tqdm import tqdm
 
 ## Get in input a matrix of size (n,d,K) and return a matrix of size (K,K) with the Euclidean distance
 def distance_matrix_three_tensor(Y, ord=2):
@@ -23,7 +24,7 @@ def cross_pairs(A, B):
     return list(itertools.product(range(A), range(B)))
 
 ## Get in input a matrix of size (n,d,K,T) and return a matrix of size (KT,KT) with the Euclidean distance
-def distance_matrix_four_tensor(Y, ord=2):
+def distance_matrix_four_tensor(Y, ord=2, verbose=True):
     n, _, K, T = Y.shape
     D = np.zeros((K * T, K * T))
     ## Calculate all cross pairs of K and T
@@ -31,7 +32,7 @@ def distance_matrix_four_tensor(Y, ord=2):
     ## Pre-define the distance matrix
     D = np.zeros((K * T, K * T))
     ## Loop over all pairs and calculate the distance
-    for q, pair in enumerate(pairs):
+    for q, pair in tqdm(enumerate(pairs)) if verbose else enumerate(pairs):
         k, t = pair[0], pair[1]
         for q_prime, pair_prime in enumerate(pairs):
             if q_prime > q:
@@ -112,7 +113,7 @@ def isomap(X, n_neighbors=None, n_components=1):
     return Y
 
 ## Full procedure to obtain the mirror
-def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=False, ord='fro', custom=False):
+def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=True, ord='fro', custom=False):
     ## Calculate distance matrix
     if Y.ndim == 3:
         D = distance_matrix_three_tensor(Y, ord=ord)
