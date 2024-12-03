@@ -11,7 +11,7 @@ setup(
 		"scipy",
         "networkx",
         "statsmodels",
-        "matplotlib"
-        "scikit-learn"
+        "matplotlib",
+        "scikit-learn",
 	],
 )

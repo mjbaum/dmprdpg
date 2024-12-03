@@ -6,4 +6,5 @@ lib/dmprdpg/__pycache__/
 data/FinDKG/
 data/README*
 notebooks/polecat_old.ipynb
+notebooks/findkg_old.ipynb
 notebooks/figures_v1/
