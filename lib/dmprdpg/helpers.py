@@ -47,3 +47,11 @@ def group_by_label(matrix, labels):
 ## Function to test the library
 def test():
     print("The library dmprdpg is working correctly.")
+
+## Find indices of nearest neighbors
+from scipy.spatial import distance_matrix
+def find_nearest_neighbours(X, n_neighbors=1):
+    ## Calculate the distance matrix from X
+    D = distance_matrix(X, X)
+    ## Get the indices of the nearest neighbors 
+    return np.argsort(D, axis=1)[:, :(n_neighbors+1)]

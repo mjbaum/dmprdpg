@@ -36,7 +36,7 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None, seed=
         if not all(p >= 0 for p in prior_K):
             raise ValueError("Priors must be non-negative")
     if prior_T is None:
-        prior_T = [1/G_prime] * G
+        prior_T = [1/G_prime] * G_prime
     else:
         if len(prior_T) != T:
             raise ValueError("Length of prior_T must match the number of time steps T")
