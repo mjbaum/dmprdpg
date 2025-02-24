@@ -332,10 +332,6 @@ def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', orde
     for (row_idx, col_idx), matrix in matrix_dict.items():
         if matrix.shape != (n, n):
             raise ValueError("All matrices must have the same dimension.")
-        if not np.allclose(matrix, matrix.T):
-            raise ValueError("All matrices must be symmetric.")
-    # Get the size of the matrices
-    n = matrix_dict[(0,0)].shape[0]
     # Check if d_max is specified and admissible
     if d_max is None:
         d_max = n - 1
@@ -350,6 +346,9 @@ def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', orde
             X_dict[i] = {}
     if directed:
         Y_dict = {}
+        if double_index:
+            for i in range(cols):
+                Y_dict[i] = {}
     # Iterate over the matrices and calculate the embeddings
     for i in range(rows):
         for j in range(cols):
@@ -357,8 +356,12 @@ def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', orde
             if directed: 
                 X, Y = duase({(0,0): matrix_dict[(i,j)]}, 1, 1, d=d, d_selection=d_selection, order=order, d_max=d_max, verbose=verbose)
                 # Store the embeddings in the dictionaries
-                X_dict[(i,j)] = X
-                Y_dict[(i,j)] = Y
+                if double_index:
+                    X_dict[i][j] = X[:,:,0]
+                    Y_dict[i][j] = Y[:,:,0]
+                else:
+                    X_dict[(i,j)] = X[:,:,0]
+                    Y_dict[(i,j)] = Y[:,:,0]
             else:
                 # Perform the truncated eigendecomposition
                 d_hat = d if d is not None else iterate_zhu(eigenvalues_A(matrix_dict[(i,j)], d_max), x=order)[-1]

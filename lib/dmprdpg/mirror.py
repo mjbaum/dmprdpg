@@ -65,7 +65,7 @@ def isomap_custom(X, n_neighbors=None, n_components=1, verbose=False):
     n_components : int, default 1 (The number of dimensions in which to embed the dataset)
     verbose : bool, default False (Whether to print the number of neighbors)
     """
-    # Compute the full pairwise distance matrix and number of neighbours (if not provided)
+    # Compute the full pairwise distance matrix and number of neighbors (if not provided)
     D = distance_matrix(X, X) ## / np.sqrt(X.shape[1])
     n = D.shape[0]
     # If n_neighbors is not specified, find the smallest number of neighbors
@@ -113,7 +113,7 @@ def isomap(X, n_neighbors=None, n_components=1):
     return Y
 
 ## Full procedure to obtain the mirror
-def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=True, ord='fro', custom=False):
+def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verbose=True, ord='fro', custom=False, return_full=False):
     ## Calculate distance matrix
     if Y.ndim == 3:
         D = distance_matrix_three_tensor(Y, ord=ord)
@@ -124,10 +124,20 @@ def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verb
     ## Apply classic multidimensional scaling
     U = cmds(D, n_components=n_components_cmds)
     ## Return ISOMAP
-    if custom:
-        return isomap_custom(U, n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
+    if return_full:
+        res = {}
+        res['U'] = U
+        if custom:
+            res['phi'] = isomap_custom(U, n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
+        else:
+            res['phi'] = isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap)
+        res['D'] = D
+        return res
     else:
-        return isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap)
+        if custom:
+            return isomap_custom(U, n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
+        else:
+            return isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap)
 
 ## Reshape output of CMDS if needed
 def reshape_cmds(U, K, T):
@@ -143,7 +153,7 @@ def distance_matrix_separate(Y, ord=2):
     T = len(Y)
     D = np.zeros((T, T))
     ## Loop over all pairs of embeddings and calculate the distance
-    for i in range(T):
+    for i in range(T-1):
         for j in range(i+1, T):
             ## Procrustes alignment of Y[j] onto Y[i]
             Y_tilde = Y[j] @ orthogonal_procrustes(Y[j], Y[i])[0]
@@ -151,3 +161,56 @@ def distance_matrix_separate(Y, ord=2):
             D[j,i] = D[i,j]
     ## Return the distance matrix
     return D
+
+## Align embeddings calculated separately (receiving as input a dictionary with double indices)
+from scipy.linalg import orthogonal_procrustes
+def align_embeddings(X):
+    rows = len(X)
+    cols = len(X[0])
+    ## Check if cols is identical for all matrices
+    if not all(len(X[i]) == cols for i in range(rows)):
+        raise ValueError("All matrices must have the same number of associated time points.")
+    ## Number of nodes
+    n = X[0][0].shape[0]
+    d = X[0][0].shape[1]
+    ## Check if all matrices have the same dimension
+    if not all(X[i][j].shape == (n,d) for i in range(rows) for j in range(cols)):
+        raise ValueError("All matrices must have the same dimension.")
+    ## Distance matrix
+    D = {}
+    for i in range(rows):
+        D[i] = np.zeros((cols,cols))
+        for j in range(cols-1):
+            for j_prime in range(j+1,cols):
+                R, _ = orthogonal_procrustes(X[i][j], X[i][j_prime])[0]
+                D[i][j,j_prime] = np.linalg.norm(X[i][j] @ R - X[i][j_prime] @ R, ord='fro') / np.sqrt(n)
+                D[i][j_prime,j] = D[i][j,j_prime]
+    return D
+
+## Calculate the mirror from separate embeddings in a dictionary
+def marginal_mirror(Y, n_components_cmds=2, n_components_isomap=1, ord='fro', n_neighbors=None, verbose=True, custom=False):
+    ## Calculate distance matrix
+    D = align_embeddings(Y)
+    K = len(D)
+    ## Check that all matrices have the same shape
+    T = D[0].shape[0]
+    if not all(D[i].shape[0] == T for i in range(K)):
+        raise ValueError("All matrices must have the same number of associated time points.")
+    ## Apply classic multidimensional scaling to each distance matrix
+    M = {}; phi = {}
+    for k in range(K):
+        M[k] = cmds(D[k], n_components=n_components_cmds)
+        ## Calculate the iso-mirror
+        if custom:
+            phi[k] = isomap_custom(M[k], n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
+        else:
+            phi[k] = isomap(M[k], n_neighbors=n_neighbors, n_components=n_components_isomap)
+    ## Calculate distance matrix from separate M[k]'s after Procrustes alignment
+    D_star = np.zeros((K,K))
+    for i in range(K-1):
+        for j in range(i+1, K):
+            R, _ = orthogonal_procrustes(M[i], M[j])
+            D_star[i,j] = np.linalg.norm(M[i] @ R - M[j] @ R, ord=ord) / np.sqrt(T)
+            D_star[j,i] = D_star[i,j]
+    ## Return output
+    return {'M': M, 'phi': phi, 'D_star': D_star}
