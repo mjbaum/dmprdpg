@@ -4,7 +4,6 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import floyd_warshall, connected_components
 from scipy.spatial import distance_matrix
 from scipy.linalg import orthogonal_procrustes
-from sklearn.manifold import MDS, Isomap
 from sklearn.manifold import Isomap
 import itertools
 from tqdm import tqdm
@@ -17,6 +16,30 @@ def distance_matrix_three_tensor(Y, ord=2):
         for j in range(i+1,K):
             D[i,j] = np.linalg.norm(Y[:,:,i] - Y[:,:,j], ord=ord) / np.sqrt(n)
             D[j,i] = D[i,j]
+    return D
+
+## Get in input a matrix of size (n,d,K,T) and return a matrix of size (K,K) or (T,T) with the Euclidean distance
+def distance_matrix_collapsed_tensor(Y, ord=2, collapse='T'):
+    n, _, K, T = Y.shape
+    ## Collapse can only be 'K' or 'T'
+    if collapse not in ['K', 'T']:
+        raise ValueError("The collapse parameter must be 'K' or 'T' (in text).")
+    if collapse == 'T':
+        D = np.zeros((K,K))
+        for i in range(K-1):
+            for j in range(i+1,K):
+                for t in range(T):
+                    D[i,j] += np.linalg.norm(Y[:,:,i,t] - Y[:,:,j,t], ord=ord) / np.sqrt(n)
+                D[i,j] /= T 
+                D[j,i] = D[i,j]
+    else:
+        D = np.zeros((T,T))
+        for i in range(T-1):
+            for j in range(i+1,T):
+                for k in range(K):
+                    D[i,j] += np.linalg.norm(Y[:,:,k,i] - Y[:,:,k,j], ord=ord) / np.sqrt(n)
+                D[i,j] /= K
+                D[j,i] = D[i,j]
     return D
 
 ## Function to generate cross pairs
@@ -118,7 +141,7 @@ def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verb
     if Y.ndim == 3:
         D = distance_matrix_three_tensor(Y, ord=ord)
     elif Y.ndim == 4:
-        D = distance_matrix_four_tensor(Y, ord=ord)
+        D = distance_matrix_four_tensor(Y, ord=ord, verbose=verbose)
     else:
         raise ValueError("The input tensor must be of shape (n,d,K) or (n,d,K,T)")
     ## Apply classic multidimensional scaling
@@ -138,6 +161,53 @@ def mirror(Y, n_neighbors=None, n_components_cmds=2, n_components_isomap=1, verb
             return isomap_custom(U, n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
         else:
             return isomap(U, n_neighbors=n_neighbors, n_components=n_components_isomap)
+
+## Distance matrix from output (res) of the mirror function with return_full=True
+def distance_matrix_DUASE(res, K, T):
+    U_tilde = res['U'].reshape((K, T, res['U'].shape[1]), order='C')
+    ## Calculate the average of distances for each t for every 
+    L = np.zeros((K, K))
+    for k in range(K-1):
+        for l in range(k+1, K):
+            ## Frobenius norm between U_tilde[k] and U_tilde[l]
+            L[k,l] = np.linalg.norm(U_tilde[k] - U_tilde[l], 'fro') / np.sqrt(T)
+            L[l,k] = L[k,l]
+    return L
+
+## Distance matrix from output (res) of the mirror function with return_full=True
+def distance_matrix_scarf(res, K, T, collapse='T', ord='fro', matrix_norm=True):
+    U_tilde = res['U'].reshape((K, T, res['U'].shape[1]), order='C')
+    ## Collapse can only be 'K' or 'T'
+    if collapse not in ['K', 'T']:
+        raise ValueError("The collapse parameter must be 'K' or 'T' (in text).")
+    ## Calculate distances
+    if collapse == 'T':
+        L = np.zeros((K, K))
+    else:
+        L = np.zeros((T, T))
+    ## Calculate distance matrix
+    if collapse == 'T':
+        for k in range(K-1):
+            for l in range(k+1, K):
+                if matrix_norm:
+                    L[k,l] = np.linalg.norm(U_tilde[k] - U_tilde[l], ord=ord) / np.sqrt(T)
+                else:
+                    for t in range(T):
+                        ## Frobenius norm between U_tilde[k] and U_tilde[l]
+                        L[k,l] += np.linalg.norm(U_tilde[k,t] - U_tilde[l,t])
+                    L[k,l] /= T
+                L[l,k] = L[k,l]
+    else:
+        for t in range(T-1):
+            for s in range(t+1, T):
+                if matrix_norm:
+                    L[t,s] = np.linalg.norm(U_tilde[k] - U_tilde[l], ord=ord) / np.sqrt(K)
+                else:
+                    for k in range(K):
+                        L[t,s] += np.linalg.norm(U_tilde[k,t] - U_tilde[k,s])
+                    L[t,s] /= K
+                L[s,t] = L[t,s]
+    return L
 
 ## Reshape output of CMDS if needed
 def reshape_cmds(U, K, T):
@@ -188,7 +258,8 @@ def align_embeddings(X):
     return D
 
 ## Calculate the mirror from separate embeddings in a dictionary
-def marginal_mirror(Y, n_components_cmds=2, n_components_isomap=1, ord='fro', n_neighbors=None, verbose=True, custom=False):
+def marginal_mirror(Y, n_components_cmds=2, n_components_isomap=1, ord='fro', n_neighbors=None, verbose=True, custom=False, 
+                    calculate_distance_matrix=True, calculate_iso_mirror=True):
     ## Calculate distance matrix
     D = align_embeddings(Y)
     K = len(D)
@@ -201,16 +272,18 @@ def marginal_mirror(Y, n_components_cmds=2, n_components_isomap=1, ord='fro', n_
     for k in range(K):
         M[k] = cmds(D[k], n_components=n_components_cmds)
         ## Calculate the iso-mirror
-        if custom:
-            phi[k] = isomap_custom(M[k], n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
-        else:
-            phi[k] = isomap(M[k], n_neighbors=n_neighbors, n_components=n_components_isomap)
+        if calculate_iso_mirror:
+            if custom:
+                phi[k] = isomap_custom(M[k], n_neighbors=n_neighbors, n_components=n_components_isomap, verbose=verbose)
+            else:
+                phi[k] = isomap(M[k], n_neighbors=n_neighbors, n_components=n_components_isomap)
     ## Calculate distance matrix from separate M[k]'s after Procrustes alignment
     D_star = np.zeros((K,K))
-    for i in range(K-1):
-        for j in range(i+1, K):
-            R, _ = orthogonal_procrustes(M[j], M[i])
-            D_star[i,j] = np.linalg.norm(M[i] - M[j] @ R, ord=ord) / np.sqrt(T)
-            D_star[j,i] = D_star[i,j]
+    if calculate_distance_matrix:
+        for i in range(K-1):
+            for j in range(i+1, K):
+                R, _ = orthogonal_procrustes(M[j], M[i])
+                D_star[i,j] = np.linalg.norm(M[i] - M[j] @ R, ord=ord) / np.sqrt(T)
+                D_star[j,i] = D_star[i,j]
     ## Return output
     return {'M': M, 'phi': phi, 'D_star': D_star}

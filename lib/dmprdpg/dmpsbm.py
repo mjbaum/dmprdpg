@@ -7,13 +7,26 @@ from scipy.linalg import orthogonal_procrustes
 from scipy.sparse import coo_matrix
 
 ## Simulate a DMP-SBM model
-def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None, seed=None):
+def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None, seed=None, z_shared=False, undirected=False):
     # Initialise number of layers and time steps from B[0,0] (if present)
     if (0,0) in B_dict:
         G = B_dict[0,0].shape[0]
         G_prime = B_dict[0,0].shape[1]
     else:
         raise ValueError("B_dict must contain an entry for (0,0)")
+    # Check if undirected is Boolean. If it is, check that the B matrices are symmetric. 
+    if not isinstance(undirected, bool):
+        raise ValueError("undirected must be a boolean")
+    if undirected:
+        if not all(np.allclose(B_dict[key], B_dict[key].T) for key in B_dict.keys()):
+            raise ValueError("All matrices in B_dict must be symmetric")
+    # z_shared must be boolean
+    if not isinstance(z_shared, bool):
+        raise ValueError("z_shared must be a boolean")
+    # Check z_shared and return an error if G != G_prime
+    if z_shared:
+        if G != G_prime:
+            raise ValueError("G must be equal to G_prime if z_shared is True")
     ## Check that all matrices in B_dict have the same dimensions
     if not all(B_dict[key].shape == (G, G_prime) for key in B_dict.keys()):
         raise ValueError("All matrices in B_dict must have the same dimension")
@@ -26,30 +39,32 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None, seed=
     if not all(key in B_dict for key in [(k, t) for k in range(K) for t in range(T)]):
         raise ValueError("B_dict must contain all possible (k,t) pairs for k=0,...,K-1 and t=0,...,T-1")
     ## If priors are None, assume identical probability vectors for all layers and times
-    if prior_K is None:
-        prior_K = [1/G] * G
+    if prior_G is None:
+        prior_G = [1/G] * G
     else:
-        if len(prior_K) != K:
-            raise ValueError("Length of prior_K must match the number of layers K")
-        if not np.isclose(sum(prior_K), 1):
+        if len(prior_G) != G:
+            raise ValueError("Length of prior_G must match G.")
+        if not np.isclose(sum(prior_G), 1):
             raise ValueError("Priors must sum to 1")
-        if not all(p >= 0 for p in prior_K):
+        if not all(p >= 0 for p in prior_G):
             raise ValueError("Priors must be non-negative")
-    if prior_T is None:
-        prior_T = [1/G_prime] * G_prime
-    else:
-        if len(prior_T) != T:
-            raise ValueError("Length of prior_T must match the number of time steps T")
-        if not np.isclose(sum(prior_T), 1):
-            raise ValueError("Priors must sum to 1")
-        if not all(p >= 0 for p in prior_T):
-            raise ValueError("Priors must be non-negative")
+    if not z_shared:
+        if prior_G_prime is None:
+            prior_G_prime = [1/G_prime] * G_prime
+        else:
+            if len(prior_G_prime) != G_prime:
+                raise ValueError("Length of prior_G_prime must match G_prime.")
+            if not np.isclose(sum(prior_G_prime), 1):
+                raise ValueError("Priors must sum to 1")
+            if not all(p >= 0 for p in prior_G_prime):
+                raise ValueError("Priors must be non-negative")
     ## Set seed if provided
     if seed is not None:
         np.random.seed(seed)
     ## Generate the group labels
-    z = np.random.choice(range(G), size=n, p=prior_K)
-    z_prime = np.random.choice(range(G_prime), size=n, p=prior_T)
+    z = np.random.choice(range(G), size=n, p=prior_G)
+    if not z_shared:
+        z_prime = np.random.choice(range(G_prime), size=n, p=prior_G_prime)
     ## Simulate a stochastic blockmodel for each matrix in B_dict, storing A_{kt} in a sparse matrix
     A_dict = {}
     ## Obtain the graph as an edgelist
@@ -57,19 +72,27 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_K=None, prior_T=None, seed=
         for t in range(T):
             edgelist = []
             for i in range(n):
-                for j in range(n):
+                for j in range(i+1, n) if undirected else range(n):
                     if i != j and np.random.binomial(1, B_dict[k, t][z[i], z_prime[j]]) == 1:
-                        edgelist += [(i, j)]  
+                        edgelist += [(i, j)]
             # Extract nodes and weights from the edge list
-            rows = [edge[0] for edge in edgelist]
-            cols = [edge[1] for edge in edgelist]
-            data = [1.0] * len(edgelist)
+            if undirected:
+                rows = [edge[0] for edge in edgelist] + [edge[1] for edge in edgelist]
+                cols = [edge[1] for edge in edgelist] + [edge[0] for edge in edgelist]
+                data = [1.0] * (2*len(edgelist))
+            else:
+                rows = [edge[0] for edge in edgelist]
+                cols = [edge[1] for edge in edgelist]
+                data = [1.0] * len(edgelist)
             # # Create the sparse adjacency matrix in COO format
             adjacency_matrix = coo_matrix((data, (rows, cols)), shape=(n,n))
             # Convert to CSR format
             A_dict[k,t] = adjacency_matrix.tocsr()
     ## Return output
-    return A_dict, z, z_prime
+    if undirected:
+        return A_dict, z
+    else: 
+        return A_dict, z, z_prime
 
 ## Full class for simulation
 class dmpsbm:
