@@ -347,21 +347,22 @@ def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', orde
     if directed:
         Y_dict = {}
         if double_index:
-            for i in range(cols):
+            for i in range(rows):
                 Y_dict[i] = {}
     # Iterate over the matrices and calculate the embeddings
     for i in range(rows):
         for j in range(cols):
             # Perform the embedding for each matrix
             if directed: 
-                X, Y = duase({(0,0): matrix_dict[(i,j)]}, 1, 1, d=d, d_selection=d_selection, order=order, d_max=d_max, verbose=verbose)
+                U, S, V = sparse_svd(matrix_dict[(i,j)], d=d)
+                X, Y = get_embeddings(U, S, V)
                 # Store the embeddings in the dictionaries
                 if double_index:
-                    X_dict[i][j] = X[:,:,0]
-                    Y_dict[i][j] = Y[:,:,0]
+                    X_dict[i][j] = X
+                    Y_dict[i][j] = Y
                 else:
-                    X_dict[(i,j)] = X[:,:,0]
-                    Y_dict[(i,j)] = Y[:,:,0]
+                    X_dict[(i,j)] = X
+                    Y_dict[(i,j)] = Y
             else:
                 # Perform the truncated eigendecomposition
                 d_hat = d if d is not None else iterate_zhu(eigenvalues_A(matrix_dict[(i,j)], d_max), x=order)[-1]

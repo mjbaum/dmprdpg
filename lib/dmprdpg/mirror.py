@@ -182,8 +182,8 @@ def align_embeddings(X):
         D[i] = np.zeros((cols,cols))
         for j in range(cols-1):
             for j_prime in range(j+1,cols):
-                R, _ = orthogonal_procrustes(X[i][j], X[i][j_prime])[0]
-                D[i][j,j_prime] = np.linalg.norm(X[i][j] @ R - X[i][j_prime] @ R, ord='fro') / np.sqrt(n)
+                R, _ = orthogonal_procrustes(X[i][j_prime], X[i][j])
+                D[i][j,j_prime] = np.linalg.norm(X[i][j]- X[i][j_prime] @ R , ord='fro') / np.sqrt(n)
                 D[i][j_prime,j] = D[i][j,j_prime]
     return D
 
@@ -209,8 +209,8 @@ def marginal_mirror(Y, n_components_cmds=2, n_components_isomap=1, ord='fro', n_
     D_star = np.zeros((K,K))
     for i in range(K-1):
         for j in range(i+1, K):
-            R, _ = orthogonal_procrustes(M[i], M[j])
-            D_star[i,j] = np.linalg.norm(M[i] @ R - M[j] @ R, ord=ord) / np.sqrt(T)
+            R, _ = orthogonal_procrustes(M[j], M[i])
+            D_star[i,j] = np.linalg.norm(M[i] - M[j] @ R, ord=ord) / np.sqrt(T)
             D_star[j,i] = D_star[i,j]
     ## Return output
     return {'M': M, 'phi': phi, 'D_star': D_star}
