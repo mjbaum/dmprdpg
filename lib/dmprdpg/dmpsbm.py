@@ -68,6 +68,8 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None,
     z = np.random.choice(range(G), size=n, p=prior_G)
     if not z_shared:
         z_prime = np.random.choice(range(G_prime), size=n, p=prior_G_prime)
+    else:
+        z_prime = np.copy(z)
     ## Simulate a stochastic blockmodel for each matrix in B_dict, storing A_{kt} in a sparse matrix
     A_dict = {}
     ## Obtain the graph as an edgelist
@@ -96,7 +98,10 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None,
     if undirected:
         return A_dict, z
     else: 
-        return A_dict, z, z_prime
+        if z_shared:
+            return A_dict, z
+        else:
+            return A_dict, z, z_prime
 
 ## Full class for simulation
 class dmpsbm:
