@@ -17,12 +17,15 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None,
     # Check if undirected is Boolean. If it is, check that the B matrices are symmetric. 
     if not isinstance(undirected, bool):
         raise ValueError("undirected must be a boolean")
-    if undirected:
-        if not all(np.allclose(B_dict[key], B_dict[key].T) for key in B_dict.keys()):
-            raise ValueError("All matrices in B_dict must be symmetric")
     # z_shared must be boolean
     if not isinstance(z_shared, bool):
         raise ValueError("z_shared must be a boolean")
+    if undirected:
+        if not all(np.allclose(B_dict[key], B_dict[key].T) for key in B_dict.keys()):
+            raise ValueError("All matrices in B_dict must be symmetric")
+        ## z_shared must be True if undirected is True
+        if not z_shared:
+            raise ValueError("z_shared must be True if undirected is True")
     # Check z_shared and return an error if G != G_prime
     if z_shared:
         if G != G_prime:
@@ -71,19 +74,20 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None,
     for k in range(K):
         for t in range(T):
             edgelist = []
-            for i in range(n):
-                for j in range(i+1, n) if undirected else range(n):
-                    if i != j and np.random.binomial(1, B_dict[k, t][z[i], z_prime[j]]) == 1:
-                        edgelist += [(i, j)]
-            # Extract nodes and weights from the edge list
             if undirected:
-                rows = [edge[0] for edge in edgelist] + [edge[1] for edge in edgelist]
-                cols = [edge[1] for edge in edgelist] + [edge[0] for edge in edgelist]
-                data = [1.0] * (2*len(edgelist))
+                for i in range(n):
+                    for j in range(i+1, n):
+                        if np.random.binomial(1, B_dict[k, t][z[i], z[j]]) == 1:
+                            edgelist += [(i, j), (j, i)]
             else:
-                rows = [edge[0] for edge in edgelist]
-                cols = [edge[1] for edge in edgelist]
-                data = [1.0] * len(edgelist)
+                for i in range(n):
+                    for j in range(n):
+                        if i != j and np.random.binomial(1, B_dict[k, t][z[i], z_prime[j]]) == 1:
+                            edgelist += [(i, j)] 
+            # Extract nodes and weights from the edge list
+            rows = [edge[0] for edge in edgelist]
+            cols = [edge[1] for edge in edgelist]
+            data = [1.0] * len(edgelist)
             # # Create the sparse adjacency matrix in COO format
             adjacency_matrix = coo_matrix((data, (rows, cols)), shape=(n,n))
             # Convert to CSR format

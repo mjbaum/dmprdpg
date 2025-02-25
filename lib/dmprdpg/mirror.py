@@ -253,7 +253,7 @@ def align_embeddings(X):
         for j in range(cols-1):
             for j_prime in range(j+1,cols):
                 R, _ = orthogonal_procrustes(X[i][j_prime], X[i][j])
-                D[i][j,j_prime] = np.linalg.norm(X[i][j]- X[i][j_prime] @ R , ord='fro') / np.sqrt(n)
+                D[i][j,j_prime] = np.linalg.norm(X[i][j] - X[i][j_prime] @ R, ord='fro') / np.sqrt(n)
                 D[i][j_prime,j] = D[i][j,j_prime]
     return D
 

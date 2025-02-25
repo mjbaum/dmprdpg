@@ -319,7 +319,7 @@ def duase(A_dict, K, T, d=None, mode='blanket', lead_order='row', d_selection='z
     return X, Y
 
 ## Calculate separate embeddings for each matrix in the dictionary
-def separate_embeddings(matrix_dict, rows, cols, d=None, d_selection='zhu', order=1, d_max=None, verbose=False, directed=False, double_index=True):
+def separate_embeddings(matrix_dict, rows, cols, d=None, order=1, d_max=None, verbose=False, directed=False, double_index=True):
     # Obtain n
     n = matrix_dict[(0,0)].shape[0]
     # Check if all row and column indices are in the correct range
