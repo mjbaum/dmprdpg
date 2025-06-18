@@ -7,7 +7,8 @@ from scipy.linalg import orthogonal_procrustes
 from scipy.sparse import coo_matrix
 
 ## Simulate a DMP-SBM model
-def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None, seed=None, z_shared=False, undirected=False):
+def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None, seed=None, seed_z=None, shared_seed=True, z_shared=False, 
+                    undirected=False, z=None, z_prime=None):
     # Initialise number of layers and time steps from B[0,0] (if present)
     if (0,0) in B_dict:
         G = B_dict[0,0].shape[0]
@@ -62,14 +63,37 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None,
             if not all(p >= 0 for p in prior_G_prime):
                 raise ValueError("Priors must be non-negative")
     ## Set seed if provided
-    if seed is not None:
-        np.random.seed(seed)
+    if shared_seed:
+        if seed_z is not None:
+            return ValueError("If shared_seed is True, seed_z must be None.")
+        else:
+            np.random.seed(seed)
+    else:
+        if seed_z is not None:
+            np.random.seed(seed_z)
     ## Generate the group labels
-    z = np.random.choice(range(G), size=n, p=prior_G)
+    if z is None:
+        z = np.random.choice(range(G), size=n, p=prior_G)
+    else:
+        if len(z) != n:
+            raise ValueError("Length of z must match n.")
+        if not all(0 <= zi < G for zi in z):
+            raise ValueError("Elements of z must be in the range [0, G-1].")
+        z = np.copy(z)
     if not z_shared:
-        z_prime = np.random.choice(range(G_prime), size=n, p=prior_G_prime)
+        if z_prime is None:
+            z_prime = np.random.choice(range(G_prime), size=n, p=prior_G_prime)
+        else:
+            if len(z_prime) != n:
+                raise ValueError("Length of z_prime must match n.")
+            if not all(0 <= zi < G_prime for zi in z_prime):
+                raise ValueError("Elements of z_prime must be in the range [0, G_prime-1].")
+            z_prime = np.copy(z_prime)
     else:
         z_prime = np.copy(z)
+    ## Set seed if provided
+    if seed is not None:
+        np.random.seed(seed)
     ## Simulate a stochastic blockmodel for each matrix in B_dict, storing A_{kt} in a sparse matrix
     A_dict = {}
     ## Obtain the graph as an edgelist
