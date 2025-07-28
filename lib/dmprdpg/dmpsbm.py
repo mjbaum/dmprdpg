@@ -8,7 +8,7 @@ from scipy.sparse import coo_matrix
 
 ## Simulate a DMP-SBM model
 def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None, seed=None, seed_z=None, shared_seed=True, z_shared=False, 
-                    undirected=False, z=None, z_prime=None):
+                    undirected=False, z=None, z_prime=None, sample_diagonal=True):
     # Initialise number of layers and time steps from B[0,0] (if present)
     if (0,0) in B_dict:
         G = B_dict[0,0].shape[0]
@@ -102,14 +102,15 @@ def simulate_dmpsbm(n, B_dict, K=None, T=None, prior_G=None, prior_G_prime=None,
             edgelist = []
             if undirected:
                 for i in range(n):
-                    for j in range(i+1, n):
+                    for j in range(i + (0 if sample_diagonal else 1), n):
                         if np.random.binomial(1, B_dict[k, t][z[i], z[j]]) == 1:
                             edgelist += [(i, j), (j, i)]
             else:
                 for i in range(n):
                     for j in range(n):
-                        if i != j and np.random.binomial(1, B_dict[k, t][z[i], z_prime[j]]) == 1:
-                            edgelist += [(i, j)] 
+                        if np.random.binomial(1, B_dict[k, t][z[i], z_prime[j]]) == 1:
+                            if i != j or (i == j and sample_diagonal):
+                                edgelist += [(i, j)] 
             # Extract nodes and weights from the edge list
             rows = [edge[0] for edge in edgelist]
             cols = [edge[1] for edge in edgelist]

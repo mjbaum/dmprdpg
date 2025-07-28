@@ -13,6 +13,7 @@ setup(
         "statsmodels",
         "matplotlib",
         "scikit-learn",
+        "numba",
 		"tqdm"
 	],
 )
