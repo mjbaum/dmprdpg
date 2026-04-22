@@ -12,10 +12,16 @@ from tqdm import tqdm
 def distance_matrix_three_tensor(Y, ord=2):
     n, _, K = Y.shape
     D = np.zeros((K,K))
-    for i in range(K):
-        for j in range(i+1,K):
-            D[i,j] = np.linalg.norm(Y[:,:,i] - Y[:,:,j], ord=ord) / np.sqrt(n)
-            D[j,i] = D[i,j]
+    if ord == '2inf':
+        for i in range(K-1):
+            for j in range(i+1,K):
+                D[i,j] = np.max(np.linalg.norm(Y[:,:,i] - Y[:,:,j], ord=2, axis=1))
+                D[j,i] = D[i,j]
+    else:
+        for i in range(K):
+            for j in range(i+1,K):
+                D[i,j] = np.linalg.norm(Y[:,:,i] - Y[:,:,j], ord=ord) / np.sqrt(n)
+                D[j,i] = D[i,j]
     return D
 
 ## Get in input a matrix of size (n,d,K,T) and return a matrix of size (K,K) or (T,T) with the Euclidean distance
@@ -55,14 +61,24 @@ def distance_matrix_four_tensor(Y, ord=2, verbose=True):
     ## Pre-define the distance matrix
     D = np.zeros((K * T, K * T))
     ## Loop over all pairs and calculate the distance
-    for q, pair in tqdm(enumerate(pairs)) if verbose else enumerate(pairs):
-        k, t = pair[0], pair[1]
-        for q_prime, pair_prime in enumerate(pairs):
-            if q_prime > q:
-                k_prime, t_prime = pair_prime[0], pair_prime[1]
-                ## Calculate the distance
-                D[q, q_prime] = np.linalg.norm(Y[:,:,k,t] - Y[:,:,k_prime,t_prime], ord=ord) / np.sqrt(n)
-                D[q_prime, q] = D[q, q_prime]
+    if ord == '2inf':
+        for q, pair in tqdm(enumerate(pairs)) if verbose else enumerate(pairs):
+            k, t = pair[0], pair[1]
+            for q_prime, pair_prime in enumerate(pairs):
+                if q_prime > q:
+                    k_prime, t_prime = pair_prime[0], pair_prime[1]
+                    ## Calculate the distance
+                    D[q, q_prime] = np.max(np.linalg.norm(Y[:,:,k,t] - Y[:,:,k_prime,t_prime], ord=2, axis=1))
+                    D[q_prime, q] = D[q, q_prime]
+    else:
+        for q, pair in tqdm(enumerate(pairs)) if verbose else enumerate(pairs):
+            k, t = pair[0], pair[1]
+            for q_prime, pair_prime in enumerate(pairs):
+                if q_prime > q:
+                    k_prime, t_prime = pair_prime[0], pair_prime[1]
+                    ## Calculate the distance
+                    D[q, q_prime] = np.linalg.norm(Y[:,:,k,t] - Y[:,:,k_prime,t_prime], ord=ord) / np.sqrt(n)
+                    D[q_prime, q] = D[q, q_prime]
     ## Return the distance matrix
     return D
 
