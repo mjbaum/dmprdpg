@@ -11,12 +11,12 @@ The library can then be imported in any _Python_ session:
 import dmprdpg
 ```
 
-A demo on how to use the library can be found in `notebooks/test_library.ipynb`.
+A demo on how to use the library can be found in `notebooks/dmpsbm.ipynb`.
 
 In this work, we explore a spectral embedding method for dynamic graphs with multiple layers. The base model for this work is a network in which a set of shared nodes exhibit connections across a number of different layers and this multiplex network is observed at a fixed number of points in time. We extend the theory of Unfolded Adjacency Spectral Embedding (UASE) to the dynamic case and plan to provide stability guarantees as well as a central limit theorem.
 
 ## Background and Notation
-We consider the case of an undirected network with $K$ layers observed at $T$ points in time for $K, T \in \mathbb{N}$.  This network can be encoded in a collection of adjacency matrices $\textbf{A} = \{\textbf{A}_{k,t}\}$ where $k = 1,\dots , K$ and $t = 1,\dots , T$. Currently, we consider only the case of undirected networks. For our model, we adopt the concept of the latent position model in which the connection probabilities between nodes are defined by each node's latent position in an underlying $d$ dimensional embedding space. Specifically, each node in our model is represented by a position in two different embedding spaces $\mathcal{X} \subset \mathbb{R}^d$ and $\mathcal{Y} \subset \mathbb{R}^d$ where the positions $\textbf{X}^{k}_i \in \mathcal{X}$ are shared across time but are different across layers and the positions $\textbf{Y}^{t}_j \in \mathcal{Y}$ are shared across layers but vary over time. The connection probability for nodes $i$ and $j$ at time $t$ in layer $k$ is given by the inner product of these positions. We can therefore express the adjacency matrices probabilistically as 
+We consider the case of a network with $K$ layers observed at $T$ points in time for $K, T \in \mathbb{N}$.  This network can be encoded in a collection of adjacency matrices $\textbf{A} = \{\textbf{A}_{k,t}\}$ where $k = 1,\dots , K$ and $t = 1,\dots , T$. For our model, we adopt the concept of the latent position model in which the connection probabilities between nodes are defined by each node's latent position in an underlying $d$ dimensional embedding space. Specifically, each node in our model is represented by a position in two different embedding spaces $\mathcal{X} \subset \mathbb{R}^d$ and $\mathcal{Y} \subset \mathbb{R}^d$ where the positions $\textbf{X}^{k}_i \in \mathcal{X}$ are shared across time but are different across layers and the positions $\textbf{Y}^{t}_j \in \mathcal{Y}$ are shared across layers but vary over time. The connection probability for nodes $i$ and $j$ at time $t$ in layer $k$ is given by the inner product of these positions. We can therefore express the adjacency matrices probabilistically as 
 ```math
 \textbf{A}_{k,t, i,j} \sim \mathrm{Bernoulli}\left(\textbf{X}^{k \intercal}_i \textbf{Y}^{t}_j\right).
 ```
@@ -41,7 +41,7 @@ We then retrieve the estimates $\hat{\textbf{X}}^k$ and $\hat{\textbf{Y}}^t$ by 
 
 ## Simulation Results
 
-We have generated a number of computer simulations to empirically test the properties of our embedding technique in the simplified case of a stochastic block model. This represents the setting where each node is assigned to one of a fixed number of communities which have a shared latent position. In this case, our model has $1000$ nodes and these are equally distributed among four communities with latent positions defined such that at time $t$ in layer $k$ the $(i,j)^{th}$ entry of $B^{(k)}_t$ denotes the connection probability between a node in community $i$ and a node in community $j$. 
+We have generated a number of computer simulations to empirically test the properties of our embedding technique in the case of a dynamic multilayer stochastic block model. This represents the setting where each node is assigned to one of a fixed number of communities which have a shared latent position. In this case, our model has $1000$ nodes and these are equally distributed among four communities with latent positions defined such that at time $t$ in layer $k$ the $(i,j)^{th}$ entry of $B^{(k)}_t$ denotes the connection probability between a node in community $i$ and a node in community $j$. 
 
 ```math
 B^{(1)}_1 = \begin{bmatrix}
@@ -130,21 +130,6 @@ In the figures below, the true latent position for each node is one of four poin
   </tr>
  </table>
 
-
-It also appears that our estimators for the latent positions have normally distributed errors and a comparison of estimator variance for networks of different sizes appears to be roughly consistent with $1/n$ scaling. These results are consistent with the central limit theorem we aim to prove.
-<table>
-  <tr>
-    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/44dda3fe-6cf1-4d5f-b988-693ef16213a4" width="450" </td>
-    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/0c481992-ae18-49c1-8b8c-2f87882a74d9" width="450" </td>
-  </tr>
- </table>
-<table>
-  <tr>
-    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/456ca546-ad08-48fe-bd93-ea2d6930e64a" width="300" </td>
-    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/3d765b24-e025-4f02-af3f-b5e50c25c4b3" width="300"</td>
-    <td><img src="https://github.com/mjbaum/Dynamic_Multiplex_Embedding/assets/150443188/713e5b83-84fa-4192-b74b-2849a15541ff" width="300"</td>
-  </tr>
- </table>
 
 
 
